@@ -1,0 +1,10 @@
+time_slot=5, num_his=12, num_pred=12, L=1, K=8, d=8, train_ratio=0.7, val_ratio=0.1, test_ratio=0.2, batch_size=32, max_epoch=500, patience=10, learning_rate=0.001, decay_epoch=10, traffic_file='./data/PEMS08.h5', SE_file='./data/SE(PEMS08).txt', model_file='./data/GMAN.pkl', log_file='./data/log-pems08'
+loading data...
+trainX: torch.Size([12476, 12, 170])		 trainY: torch.Size([12476, 12, 170])
+valX:   torch.Size([1763, 12, 170])		valY:   torch.Size([1763, 12, 170])
+testX:   torch.Size([3548, 12, 170])		testY:   torch.Size([3548, 12, 170])
+mean:   230.2200		std:   145.9074
+data loaded!
+compiling model...
+trainable parameters: 209,923
+**** training model ****
