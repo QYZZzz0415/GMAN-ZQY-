@@ -346,7 +346,7 @@ class GMAN(nn.Module):
         Input_1 = self.linear(Input)
         Input_1 = self.linear_1(Input_1)
         Input_1 = self.linear_2(Input_1)
-        X_in=torch.cat((X, Input_1), dim=-1)
+        X_in=torch.cat((X, Input_1), dim=-1)#拼接
         X = self.linear_3(X_in)
         X = torch.unsqueeze(X, -1)#调整输入数据的形状
         X = self.FC_1(X)#升维
