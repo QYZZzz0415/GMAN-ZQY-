@@ -2,7 +2,7 @@ import os
 
 import torch
 
-os.environ["KMP_DUPLICATE_LIB_OK"]="TRUE"
+os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
 import argparse
 import time
 import torch.optim as optim
@@ -18,7 +18,7 @@ from model.train import train
 from model.test import test
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-parser = argparse.ArgumentParser()#创建对象
+parser = argparse.ArgumentParser()  # 创建对象
 parser.add_argument('--time_slot', type=int, default=10,
                     help='a time step is 10 mins')
 parser.add_argument('--num_his', type=int, default=12,
@@ -49,21 +49,21 @@ parser.add_argument('--decay_epoch', type=int, default=10,
                     help='decay epoch')
 parser.add_argument('--traffic_file', default='./data/10min_data.h5',
                     help='traffic file')
-parser.add_argument('--weather_file',default='./data/10 min after normolization.csv')
+parser.add_argument('--weather_file', default='./data/10 min after normolization.csv')
 parser.add_argument('--SE_file', default='./data/SE(BJ276).txt',
                     help='spatial embedding file')
 parser.add_argument('--model_file', default='./data/GMAN.pkl',
                     help='save the model to disk')
 parser.add_argument('--log_file', default='./data/log',
                     help='log file')
-args = parser.parse_args()#解析对象
+args = parser.parse_args()  # 解析对象
 log = open(args.log_file, 'w')
 log_string(log, str(args)[10: -1])
 T = 24 * 60 // args.time_slot  # Number of time steps in one day
 # load data
 log_string(log, 'loading data...')
 (trainX, trainTE, trainY, valX, valTE, valY, testX, testTE,
- testY, SE, mean, std,wea_trainX, wea_trainY, val_weaX, val_weaY, test_weaX, test_weaY) = load_data(args)
+ testY, SE, mean, std, wea_trainX, wea_trainY, val_weaX, val_weaY, test_weaX, test_weaY) = load_data(args)
 log_string(log, f'trainX: {trainX.shape}\t\t trainY: {trainY.shape}')
 log_string(log, f'valX:   {valX.shape}\t\tvalY:   {valY.shape}')
 log_string(log, f'testX:   {testX.shape}\t\ttestY:   {testY.shape}')
@@ -72,7 +72,7 @@ log_string(log, 'data loaded!')
 del trainX, trainTE, valX, valTE, testX, testTE, mean, std
 # build model
 log_string(log, 'compiling model...')
-model = GMAN(SE, args, bn_decay=0.1).to(device) #spatial embedding
+model = GMAN(SE, args, bn_decay=0.1).to(device)  # spatial embedding
 
 loss_criterion = nn.MSELoss()
 
@@ -86,7 +86,7 @@ log_string(log, 'trainable parameters: {:,}'.format(parameters))
 if __name__ == '__main__':
     start = time.time()
     loss_train, loss_val = train(model, args, log, loss_criterion, optimizer, scheduler)
-    #plot_train_val_loss(loss_train, loss_val, './figure/train_val_loss.png')
+    # plot_train_val_loss(loss_train, loss_val, './figure/train_val_loss.png')
     trainPred, valPred, testPred = test(args, log)
     end = time.time()
     log_string(log, 'total time: %.1fmin' % ((end - start) / 60))
@@ -104,7 +104,7 @@ if __name__ == '__main__':
     # name = ['trainPred', 'trainY', 'valPred', 'valY', 'testPred', 'testY']
     # for i, data in enumerate(l):
     #     np.savetxt('./figure/' + name[i] + '.txt', data, fmt='%s')
-        
+
     # Plot the test prediction vs target（optional)
     # plt.figure(figsize=(10, 280))
     # for k in range(325):
