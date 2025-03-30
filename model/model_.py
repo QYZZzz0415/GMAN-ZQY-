@@ -338,14 +338,14 @@ class GMAN(nn.Module):
                        bn_decay=bn_decay)#升维
         self.FC_2 = FC(input_dims=[D, D], units=[D, 1], activations=[F.relu, None],
                        bn_decay=bn_decay)#降维
-        self.linear = nn.Linear(11, 18)
-        self.linear_1 = nn.Linear(18, 13)
-        self.linear_2 = nn.Linear(13, 276)
+        self.linear = nn.Linear(11, 5)
+        self.linear_1 = nn.Linear(5, 276)
+        # self.linear_2 = nn.Linear(2, 1)
         self.linear_3 = nn.Linear(276 + 276 , 276)
     def forward(self, X, TE, Input):
         Input_1 = self.linear(Input)
         Input_1 = self.linear_1(Input_1)
-        Input_1 = self.linear_2(Input_1)
+        # Input_1 = self.linear_2(Input_1)
         X_in=torch.cat((X, Input_1), dim=-1)#拼接
         X = self.linear_3(X_in)
         X = torch.unsqueeze(X, -1)#调整输入数据的形状
