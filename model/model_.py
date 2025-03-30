@@ -351,7 +351,7 @@ class GMAN(nn.Module):
         X = torch.unsqueeze(X, -1)#调整输入数据的形状
         X = self.FC_1(X)#升维
         # STE
-        STE = self.STEmbedding(self.SE, TE)
+        STE = self.STEmbedding(self.SE, TE)#时空嵌入
         STE_his = STE[:, :self.num_his]#历史步长
         STE_pred = STE[:, self.num_his:]#预测步长
         # encoder
