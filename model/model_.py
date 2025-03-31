@@ -338,10 +338,10 @@ class GMAN(nn.Module):
                        bn_decay=bn_decay)#升维
         self.FC_2 = FC(input_dims=[D, D], units=[D, 1], activations=[F.relu, None],
                        bn_decay=bn_decay)#降维
-        self.linear = nn.Linear(11, 5)
-        self.linear_1 = nn.Linear(5, 276)
+        self.linear = nn.Linear(11, 100)
+        self.linear_1 = nn.Linear(100, 300)
         # self.linear_2 = nn.Linear(2, 1)
-        self.linear_3 = nn.Linear(276 + 276 , 276)
+        self.linear_3 = nn.Linear(276 + 300 , 276)
     def forward(self, X, TE, Input):
         Input_1 = self.linear(Input)
         Input_1 = self.linear_1(Input_1)
