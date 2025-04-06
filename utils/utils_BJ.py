@@ -79,7 +79,7 @@ def seq2instance(data, num_his, num_pred):            # 把数据切分成X（12
 
 def load_data(args):
     # Traffic
-    df = pd.read_hdf(args.traffic_file)                  # './BRT/3-5.H5'
+    df = pd.read_hdf(args.traffic_file)                  # './data/10min_data.h5'
     traffic = torch.from_numpy(df.values).to(device)     # [17296,44]提取客流  [1800,275]
     # weather
     wea_df = pd.read_csv(args.weather_file, header=None)
@@ -134,13 +134,13 @@ def load_data(args):
 
     # normalization
     mean, std = torch.mean(trainX).cpu(), torch.std(trainX).cpu()           # 计算均值方差
-
+    #mean 均值 std 标准差
     trainX = ((trainX - mean) / std).to(device)                             # 数据集归一化
     valX = ((valX - mean) / std).to(device)
     testX = ((testX - mean) / std).to(device)
 
     # spatial embedding                                                     # 生成SE
-    with open(args.SE_file, mode='r') as f:                                 # './data/SE(BRT).txt
+    with open(args.SE_file, mode='r') as f:                                 # './data/SE(BJ276).txt 只读
         lines = f.readlines()
         temp = lines[0].split(' ')
         num_vertex, dims = int(temp[0]), int(temp[1])
@@ -153,7 +153,7 @@ def load_data(args):
     # temporal embedding
     time = pd.DatetimeIndex(df.index)                                     # pd.DatetimeIndex()直接生成时间戳索引
 
-    dayofweek = torch.reshape(torch.tensor(time.weekday), (-1, 1))        #  dayofweek[17296,1]生成一周内内今天是哪一天的列表
+    dayofweek = torch.reshape(torch.tensor(time.weekday), (-1, 1))        #  dayofweek[17296,1]生成一周内今天是哪一天的列表
 
     # delta = datetime(2012, 6, 28, 0, 0, 0) - datetime(2012, 3, 1, 0, 0, 0)
     timeofday = (time.hour * 3600 + time.minute * 60 + time.second) \

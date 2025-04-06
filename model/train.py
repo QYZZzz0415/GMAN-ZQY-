@@ -20,13 +20,13 @@ def train(model, args, log, loss_criterion, optimizer, scheduler):
 
 
     wait = 0
-    val_loss_min = float('inf')
+    val_loss_min = float('inf')#正无穷大
     best_model_wts = None
     train_total_loss = []
     val_total_loss = []
 
     # Train & validation
-    for epoch in range(args.max_epoch):                                # epoch =10
+    for epoch in range(args.max_epoch):                                # epoch =13
         if wait >= args.patience:
             log_string(log, f'early stop at epoch: {epoch:04d}')
             break

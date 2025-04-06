@@ -73,7 +73,7 @@ class STEmbedding(nn.Module):
         self.FC_se = FC(
             input_dims=[D, D], units=[D, D], activations=[F.relu, None],
             bn_decay=bn_decay)
-
+        #D是多头注意力通道输出维度
         self.FC_te = FC(
             input_dims=[295, D], units=[D, D], activations=[F.relu, None],
             bn_decay=bn_decay)  # input_dims = time step per day + days per week=288+7=295
@@ -341,30 +341,30 @@ class GMAN(nn.Module):
         self.linear = nn.Linear(11, 100)
         self.linear_1 = nn.Linear(100, 300)
         # self.linear_2 = nn.Linear(2, 1)
-        self.linear_3 = nn.Linear(276 + 300 , 276)
+        self.linear_3 = nn.Linear(276 + 300 , 276)#和节点数对齐
     def forward(self, X, TE, Input):
         Input_1 = self.linear(Input)
         Input_1 = self.linear_1(Input_1)
         # Input_1 = self.linear_2(Input_1)
         X_in=torch.cat((X, Input_1), dim=-1)#拼接
         X = self.linear_3(X_in)
-        X = torch.unsqueeze(X, -1)#调整输入数据的形状
-        X = self.FC_1(X)#升维
+        X = torch.unsqueeze(X, -1)#调整输入数据的形状 增加一个维度方便在卷积层升维
+        X = self.FC_1(X)#升维 输入到FC层 进行非线性变换
         # STE
         STE = self.STEmbedding(self.SE, TE)#时空嵌入
-        STE_his = STE[:, :self.num_his]#历史步长
-        STE_pred = STE[:, self.num_his:]#预测步长
+        STE_his = STE[:, :self.num_his]#历史时间步长 num_his是历史时间步数
+        STE_pred = STE[:, self.num_his:]#预测时间步长 num_pred是预测时间步数
         # encoder
         for net in self.STAttBlock_1:
-            X = net(X, STE_his)
+            X = net(X, STE_his)#STAttBlock forward
         # transAtt
         X = self.transformAttention(X, STE_his, STE_pred)
         # decoder
         for net in self.STAttBlock_2:
-            X = net(X, STE_pred)
+            X = net(X, STE_pred)#STAttBlock forward
         # output
         X = self.FC_2(X)
         del STE, STE_his, STE_pred
-        return torch.squeeze(X, 3)
+        return torch.squeeze(X, 3)#移除X张量上第三维尺寸为 1 的维度
 
 
