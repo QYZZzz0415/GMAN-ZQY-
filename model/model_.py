@@ -75,10 +75,10 @@ class STEmbedding(nn.Module):
             bn_decay=bn_decay)
         #D是多头注意力通道输出维度
         self.FC_te = FC(
-            input_dims=[295, D], units=[D, D], activations=[F.relu, None],
+            input_dims=[115, D], units=[D, D], activations=[F.relu, None],
             bn_decay=bn_decay)  # input_dims = time step per day + days per week=288+7=295
 
-    def forward(self, SE, TE, T=288):
+    def forward(self, SE, TE, T=108):  ###
         # spatial embedding
         SE = SE.unsqueeze(0).unsqueeze(0)
         SE = self.FC_se(SE)
@@ -88,7 +88,7 @@ class STEmbedding(nn.Module):
         for i in range(TE.shape[0]):
             dayofweek[i] = F.one_hot(TE[..., 0][i].to(torch.int64) % 7, 7)
         for j in range(TE.shape[0]):
-            timeofday[j] = F.one_hot(TE[..., 1][j].to(torch.int64) % 288, T)
+            timeofday[j] = F.one_hot(TE[..., 1][j].to(torch.int64) % 108, T)
         TE = torch.cat((dayofweek, timeofday), dim=-1).to(device)
         TE = TE.unsqueeze(dim=2).to(device)
         TE = self.FC_te(TE)

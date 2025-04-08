@@ -82,7 +82,7 @@ def load_data(args):
     df = pd.read_hdf(args.traffic_file)                  # './data/10min_data.h5'
     traffic = torch.from_numpy(df.values).to(device)     # [17296,44]提取客流  [1800,275]
     # weather
-    wea_df = pd.read_csv(args.weather_file, header=None)
+    wea_df = pd.read_csv(args.weather_file, header=None)#'./data/10 min after normolization.csv'
     wea_df = wea_df.T                                       # [1800,10]
     # wea_df.drop('timestamp', axis=1, inplace=True)       # Drop函数删除Dataframe指定行列
     wea_data = torch.from_numpy(wea_df.values).to(device)# 生成数据
@@ -102,7 +102,7 @@ def load_data(args):
     # 分割数据集
     train = traffic[: train_steps].to(device)            # 切分训练集、验证集、测试集
     val = traffic[train_steps: train_steps + val_steps].to(device)
-    test = traffic[-test_steps:].to(device)
+    test = traffic[-test_steps:].to(device)#-test_steps作为起始位置
     wea_train = wea_data[:train_steps].to(device)        # [12107,5]
     wea_val = wea_data[train_steps: train_steps + val_steps].to(device)  # [1730,5]
     wea_test = wea_data[-test_steps:].to(device)         # [3459,5]
@@ -144,11 +144,12 @@ def load_data(args):
         lines = f.readlines()
         temp = lines[0].split(' ')
         num_vertex, dims = int(temp[0]), int(temp[1])
-        SE = torch.zeros((num_vertex, dims), dtype=torch.float32).to(device)
+        SE = torch.zeros((num_vertex, dims), dtype=torch.float32).to(device)#初始化张量
         for line in lines[1:]:
             temp = line.split(' ')
             index = int(temp[0])
             SE[index] = torch.tensor([float(ch) for ch in temp[1:]])
+            #每行代表一个嵌入向量
     # print("SE",SE.is_cuda)
     # temporal embedding
     time = pd.DatetimeIndex(df.index)                                     # pd.DatetimeIndex()直接生成时间戳索引
@@ -157,7 +158,7 @@ def load_data(args):
 
     # delta = datetime(2012, 6, 28, 0, 0, 0) - datetime(2012, 3, 1, 0, 0, 0)
     timeofday = (time.hour * 3600 + time.minute * 60 + time.second) \
-                // 900.0  # delta.total_seconds()
+                // 600.0  # delta.total_seconds()     ####600
 
     timeofday = torch.reshape(torch.tensor(timeofday), (-1, 1))           # [17296,1] 生成一天中数据在那个时刻的列表
 

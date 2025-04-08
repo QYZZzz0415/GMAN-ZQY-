@@ -21,9 +21,9 @@ device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 parser = argparse.ArgumentParser()  # 创建对象
 parser.add_argument('--time_slot', type=int, default=10,
                     help='a time step is 10 mins')#时间步长
-parser.add_argument('--num_his', type=int, default=12,
+parser.add_argument('--num_his', type=int, default=6,
                     help='history steps')
-parser.add_argument('--num_pred', type=int, default=12,
+parser.add_argument('--num_pred', type=int, default=6,
                     help='prediction steps')
 parser.add_argument('--L', type=int, default=1,
                     help='number of STAtt Blocks')
@@ -39,7 +39,7 @@ parser.add_argument('--test_ratio', type=float, default=0.2,
                     help='testing set [default : 0.2]')#test占 20%
 parser.add_argument('--batch_size', type=int, default=64,
                     help='batch size')#输入模型的数据样本数量
-parser.add_argument('--max_epoch', type=int, default=13,
+parser.add_argument('--max_epoch', type=int, default=200,
                     help='epoch to run')#打乱数据样本 每一个epoch把所有数据样本跑一遍
 parser.add_argument('--patience', type=int, default=10,
                     help='patience for early stop')#验证集损失没有下降 第十轮停止
@@ -57,14 +57,14 @@ parser.add_argument('--model_file', default='./data/GMAN.pkl',
 parser.add_argument('--log_file', default='./data/log',
                     help='log file')
 args = parser.parse_args()  # 解析对象
-log = open(args.log_file, 'w') # 清空原有内容，全部重新生成s
+log = open(args.log_file, 'w') # 清空原有内容，全部重新生成
 log_string(log, str(args)[10: -1])
 T = 24 * 60 // args.time_slot  # Number of time steps in one day
 # load data
 log_string(log, 'loading data...')
 (trainX, trainTE, trainY, valX, valTE, valY, testX, testTE,
  testY, SE, mean, std, wea_trainX, wea_trainY, val_weaX, val_weaY, test_weaX, test_weaY) = load_data(args)
-#  区分历史客流 预测客流 转化为序列
+#  把客流和天气数据集转化成历史和预测  把向量存入空间嵌入SE 时间步TE转化成历史和预测
 log_string(log, f'trainX: {trainX.shape}\t\t trainY: {trainY.shape}')
 log_string(log, f'valX:   {valX.shape}\t\tvalY:   {valY.shape}')
 log_string(log, f'testX:   {testX.shape}\t\ttestY:   {testY.shape}')
@@ -81,7 +81,7 @@ optimizer = optim.Adam(model.parameters(), args.learning_rate) #优化器
 scheduler = optim.lr_scheduler.StepLR(optimizer,
                                       step_size=args.decay_epoch,
                                       gamma=0.9)#动态调整学习率
-parameters = count_parameters(model)#计划可训练参数综述
+parameters = count_parameters(model)#计划可训练参数总数
 log_string(log, 'trainable parameters: {:,}'.format(parameters))
 
 if __name__ == '__main__': #作为主程序导入才执行

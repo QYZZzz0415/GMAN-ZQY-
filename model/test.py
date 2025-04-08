@@ -56,7 +56,7 @@ def test(args, log):
                 break
             pred_batch = model(X, TE, Input)
             valPred.append(pred_batch.cpu().detach().clone())
-            del X, TE, pred_batch ,Input ##
+            del X, TE, pred_batch ,Input
         valPred = torch.from_numpy(np.concatenate(valPred, axis=0))
         valPred = valPred * std + mean
         valY = valY[0:valPred.shape[0]]
