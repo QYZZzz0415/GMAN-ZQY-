@@ -31,8 +31,8 @@ def test(args, log):
             start_idx = batch_idx * args.batch_size
             end_idx = min(num_train, (batch_idx + 1) * args.batch_size)
             if end_idx <=num_train:
-                X = trainX[start_idx: end_idx]
-                TE = trainTE[start_idx: end_idx]
+                X = trainX[start_idx: end_idx]#交通流量数据
+                TE = trainTE[start_idx: end_idx]#时间嵌入信息（时刻和星期几）
                 Input = wea_trainX[start_idx: end_idx].to(device)  ## 获取当前批次的测试天气数据作为 Input
             else:
                 break
@@ -79,6 +79,7 @@ def test(args, log):
         testPred = testPred* std + mean
         testY = testY[0:testPred.shape[0]]
     end_test = time.time()
+
     train_mae, train_rmse, train_mape = metric(trainPred, trainY.cpu())
     val_mae, val_rmse, val_mape = metric(valPred, valY.cpu())
     test_mae, test_rmse, test_mape = metric(testPred, testY.cpu())

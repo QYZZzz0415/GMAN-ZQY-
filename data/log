@@ -1,2 +1,10 @@
-time_slot=10, num_his=12, num_pred=12, L=1, K=8, d=8, train_ratio=0.7, val_ratio=0.1, test_ratio=0.2, batch_size=64, max_epoch=13, patience=10, learning_rate=0.01, decay_epoch=10, traffic_file='./data/10min_data.h5', weather_file='./data/10 min after normolization.csv', SE_file='./data/SE(BJ276).txt', model_file='./data/GMAN.pkl', log_file='./data/log'
+time_slot=10, num_his=6, num_pred=6, L=1, K=8, d=8, train_ratio=0.7, val_ratio=0.1, test_ratio=0.2, batch_size=8, max_epoch=200, patience=10, learning_rate=0.01, decay_epoch=10, traffic_file='./data/10min_data.h5', weather_file='./data/10 min after normolization.csv', SE_file='./data/SE(BJ276).txt', model_file='./data/GMAN.pkl', log_file='./data/log'
 loading data...
+trainX: torch.Size([1879, 6, 276])		 trainY: torch.Size([1879, 6, 276])
+valX:   torch.Size([259, 6, 276])		valY:   torch.Size([259, 6, 276])
+testX:   torch.Size([529, 6, 276])		testY:   torch.Size([529, 6, 276])
+mean:   172.7848		std:   250.8605
+data loaded!
+compiling model...
+trainable parameters: 318,055
+**** training model ****

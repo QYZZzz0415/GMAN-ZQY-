@@ -76,21 +76,21 @@ class STEmbedding(nn.Module):
         #D是多头注意力通道输出维度
         self.FC_te = FC(
             input_dims=[115, D], units=[D, D], activations=[F.relu, None],
-            bn_decay=bn_decay)  # input_dims = time step per day + days per week=288+7=295
+            bn_decay=bn_decay)  # input_dims = time step per day + days per week=108+7=115
 
-    def forward(self, SE, TE, T=108):  ###
+    def forward(self, SE, TE, T=108):
         # spatial embedding
         SE = SE.unsqueeze(0).unsqueeze(0)
         SE = self.FC_se(SE)
         # temporal embedding
-        dayofweek = torch.empty(TE.shape[0], TE.shape[1], 7)
-        timeofday = torch.empty(TE.shape[0], TE.shape[1], T)
+        dayofweek = torch.empty(TE.shape[0], TE.shape[1], 7)#长期趋势
+        timeofday = torch.empty(TE.shape[0], TE.shape[1], T)#当天时间（早高峰/晚高峰)
         for i in range(TE.shape[0]):
             dayofweek[i] = F.one_hot(TE[..., 0][i].to(torch.int64) % 7, 7)
         for j in range(TE.shape[0]):
             timeofday[j] = F.one_hot(TE[..., 1][j].to(torch.int64) % 108, T)
-        TE = torch.cat((dayofweek, timeofday), dim=-1).to(device)
-        TE = TE.unsqueeze(dim=2).to(device)
+        TE = torch.cat((dayofweek, timeofday), dim=-1).to(device)#最后一维
+        TE = TE.unsqueeze(dim=2).to(device)#第二维
         TE = self.FC_te(TE)
         del dayofweek, timeofday
         return SE + TE
@@ -137,7 +137,7 @@ class spatialAttention(nn.Module):
         attention = F.softmax(attention, dim=-1)
         # [batch_size, num_step, num_vertex, D]
         X = torch.matmul(attention, value)
-        X = torch.cat(torch.split(X, batch_size, dim=0), dim=-1)  # orginal K, change to batch_size
+        X = torch.cat(torch.split(X, batch_size, dim=0), dim=-1)  # orginal K, change to batch_size 分割再拼接
         X = self.FC(X)
         del query, key, value, attention
         return X
@@ -182,13 +182,14 @@ class temporalAttention(nn.Module):
         # query: [K * batch_size, num_vertex, num_step, d]
         # key:   [K * batch_size, num_vertex, d, num_step]
         # value: [K * batch_size, num_vertex, num_step, d]
+        #重新排列向量维度信息
         query = query.permute(0, 2, 1, 3)
         key = key.permute(0, 2, 3, 1)
         value = value.permute(0, 2, 1, 3)
         # [K * batch_size, num_vertex, num_step, num_step]
         attention = torch.matmul(query, key)
         attention /= (self.d ** 0.5)
-        # mask attention score
+        # mask attention score 屏蔽未来时间步信息
         if self.mask:
             batch_size = X.shape[0]
             num_step = X.shape[1]
@@ -232,7 +233,7 @@ class gatedFusion(nn.Module):
         XS = self.FC_xs(HS)
         XT = self.FC_xt(HT)
         z = torch.sigmoid(torch.add(XS, XT))
-        H = torch.add(torch.mul(z, HS), torch.mul(1 - z, HT))
+        H = torch.add(torch.mul(z, HS), torch.mul(1 - z, HT))#z大 空间特征占比高
         H = self.FC_h(H)
         del XS, XT, z
         return H
@@ -246,8 +247,8 @@ class STAttBlock(nn.Module):
         self.gatedFusion = gatedFusion(K * d, bn_decay)
 
     def forward(self, X, STE):
-        HS = self.spatialAttention(X, STE)
-        HT = self.temporalAttention(X, STE)
+        HS = self.spatialAttention(X, STE)#空间注意力机制计算
+        HT = self.temporalAttention(X, STE)#时间注意力机制计算
         H = self.gatedFusion(HS, HT)
         del HS, HT
         return torch.add(X, H)
@@ -299,7 +300,7 @@ class transformAttention(nn.Module):
         attention /= (self.d ** 0.5)
         attention = F.softmax(attention, dim=-1)
         # [batch_size, num_pred, num_vertex, D]
-        X = torch.matmul(attention, value)
+        X = torch.matmul(attention, value)#根据注意力分数对值进行加权求和
         X = X.permute(0, 2, 1, 3)
         X = torch.cat(torch.split(X, batch_size, dim=0), dim=-1)
         X = self.FC(X)
@@ -338,15 +339,15 @@ class GMAN(nn.Module):
                        bn_decay=bn_decay)#升维
         self.FC_2 = FC(input_dims=[D, D], units=[D, 1], activations=[F.relu, None],
                        bn_decay=bn_decay)#降维
-        self.linear = nn.Linear(11, 100)
-        self.linear_1 = nn.Linear(100, 300)
+        self.linear = nn.Linear(11, 150)
+        #self.linear_1 = nn.Linear(100, 300)
         # self.linear_2 = nn.Linear(2, 1)
-        self.linear_3 = nn.Linear(276 + 300 , 276)#和节点数对齐
+        self.linear_3 = nn.Linear(276 + 150 , 276)#和节点数对齐
     def forward(self, X, TE, Input):
         Input_1 = self.linear(Input)
-        Input_1 = self.linear_1(Input_1)
+        # Input_1 = self.linear_1(Input_1)
         # Input_1 = self.linear_2(Input_1)
-        X_in=torch.cat((X, Input_1), dim=-1)#拼接
+        X_in=torch.cat((X, Input_1), dim=-1)#把交通流量数据和外部因素拼接
         X = self.linear_3(X_in)
         X = torch.unsqueeze(X, -1)#调整输入数据的形状 增加一个维度方便在卷积层升维
         X = self.FC_1(X)#升维 输入到FC层 进行非线性变换
